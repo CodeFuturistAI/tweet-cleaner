@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy Policy — Tweet Cleaner</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 16px; line-height: 1.7;
+    background: #f8fafc; color: #1e293b;
+    padding: 48px 20px 80px;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; }
+  .badge {
+    display: inline-block;
+    background: #ecfdf5; color: #065f46;
+    border: 1px solid #a7f3d0;
+    border-radius: 999px; font-size: 13px; font-weight: 600;
+    padding: 4px 14px; margin-bottom: 24px;
+  }
+  h1 { font-size: 32px; font-weight: 800; letter-spacing: -0.03em;
+       color: #0f172a; margin-bottom: 6px; }
+  .meta { color: #64748b; font-size: 14px; margin-bottom: 40px; }
+  h2 { font-size: 18px; font-weight: 700; color: #0f172a;
+       margin: 36px 0 10px; padding-bottom: 8px;
+       border-bottom: 2px solid #e2e8f0; }
+  p { color: #334155; margin-bottom: 14px; }
+  ul { color: #334155; padding-left: 22px; margin-bottom: 14px; }
+  ul li { margin-bottom: 6px; }
+  .highlight {
+    background: #f0fdf4; border: 1px solid #bbf7d0;
+    border-left: 4px solid #22c55e;
+    border-radius: 8px; padding: 16px 20px; margin: 24px 0;
+  }
+  .highlight strong { color: #15803d; }
+  footer { margin-top: 60px; padding-top: 20px;
+           border-top: 1px solid #e2e8f0;
+           font-size: 13px; color: #94a3b8; }
+  a { color: #2563eb; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="badge">🔒 Privacy Policy</div>
+  <h1>Tweet Cleaner</h1>
+  <p class="meta">Last updated: April 25, 2026 &nbsp;·&nbsp; Developer: Engin Capat</p>
+
+  <div class="highlight">
+    <strong>Short version:</strong> Tweet Cleaner does not collect, store, or transmit any personal data whatsoever. Everything happens locally in your browser. No servers. No accounts. No tracking.
+  </div>
+
+  <h2>1. What data we collect</h2>
+  <p><strong>None.</strong> Tweet Cleaner does not collect any personal data, usage data, or any other information from its users.</p>
+
+  <h2>2. How the extension works</h2>
+  <p>Tweet Cleaner operates entirely within your browser tab on X.com (formerly Twitter). It:</p>
+  <ul>
+    <li>Reads tweet content visible on your own profile page to identify tweets matching your filters.</li>
+    <li>Sends delete requests to X.com on your behalf, using your existing logged-in session — exactly as if you clicked "Delete" manually.</li>
+    <li>Stores your filter preferences (count, date range, delay setting) locally in Chrome's storage API — this data never leaves your device.</li>
+  </ul>
+
+  <h2>3. Data we do NOT collect</h2>
+  <ul>
+    <li>Your X / Twitter username or password</li>
+    <li>Your tweet content</li>
+    <li>Your browsing history</li>
+    <li>Your IP address</li>
+    <li>Any analytics or usage statistics</li>
+    <li>Any personal or identifying information</li>
+  </ul>
+
+  <h2>4. Data storage</h2>
+  <p>Your filter preferences (e.g. how many tweets to delete, date range) are saved locally on your device using Chrome's <code>chrome.storage</code> API. This data is stored only on your device and is never transmitted to any server.</p>
+
+  <h2>5. Third-party services</h2>
+  <p>Tweet Cleaner does not use any third-party analytics, advertising, or tracking services. The extension does not communicate with any external server other than X.com (which you are already logged into).</p>
+
+  <h2>6. Permissions</h2>
+  <p>Tweet Cleaner requests the following Chrome permissions:</p>
+  <ul>
+    <li><strong>storage</strong> — to save your filter preferences locally on your device.</li>
+    <li><strong>tabs</strong> — to detect which tab is open and whether you are on your X.com profile.</li>
+    <li><strong>scripting</strong> — to interact with the X.com page to scan and delete tweets.</li>
+    <li><strong>host permission for x.com / twitter.com</strong> — required to operate on those pages.</li>
+  </ul>
+  <p>None of these permissions are used to collect or transmit data.</p>
+
+  <h2>7. Children's privacy</h2>
+  <p>Tweet Cleaner does not knowingly collect any data from anyone, including children under the age of 13.</p>
+
+  <h2>8. Changes to this policy</h2>
+  <p>If this privacy policy changes, the updated version will be published at the same URL with a revised "Last updated" date.</p>
+
+  <h2>9. Contact</h2>
+  <p>If you have any questions about this privacy policy, you can contact the developer at: <a href="mailto:capatengin@gmail.com">capatengin@gmail.com</a></p>
+
+  <footer>
+    Tweet Cleaner is an independent project. It is not affiliated with, endorsed by, or connected to X Corp. or Twitter, Inc.
+  </footer>
+
+</div>
+</body>
+</html>
