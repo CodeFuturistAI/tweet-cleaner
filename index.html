@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tweet Cleaner — Bulk Delete Tweets on X</title>
+<meta name="description" content="Delete your old tweets, replies and retweets in bulk on X (Twitter). No API key. No developer account. 100% free Chrome extension." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800;900&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" />
+<style>
+/* ── TOKENS ─────────────────────────────────────────── */
+:root {
+  --bg:       #090c10;
+  --bg2:      #0e1318;
+  --bg3:      #131a22;
+  --border:   #1e2d3d;
+  --border2:  #263545;
+  --text:     #e8eef4;
+  --dim:      #8fa3b8;
+  --mute:     #4a6070;
+  --red:      #e8304f;
+  --red-dim:  rgba(232,48,79,0.12);
+  --red-glow: rgba(232,48,79,0.35);
+  --amber:    #f59e0b;
+  --amber-dim:rgba(245,158,11,0.1);
+  --green:    #22c55e;
+  --radius:   14px;
+  --font-head:'Outfit', sans-serif;
+  --font-body:'DM Sans', sans-serif;
+}
+
+/* ── RESET ──────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; text-decoration: none; }
+img { display: block; max-width: 100%; height: auto; object-fit: contain; }
+
+/* ── NAV ─────────────────────────────────────────────── */
+nav {
+  position: sticky; top: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 32px;
+  height: 60px;
+  background: rgba(9,12,16,0.85);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+}
+.nav-logo {
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--font-head); font-size: 18px; font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.nav-logo img { width: 28px; height: 28px; min-width: 28px; border-radius: 7px; object-fit: contain; }
+.nav-logo span { color: var(--red); }
+.nav-links { display: flex; align-items: center; gap: 4px; }
+.nav-links a {
+  padding: 6px 14px; border-radius: 8px;
+  font-size: 14px; font-weight: 500; color: var(--dim);
+  transition: color 0.15s, background 0.15s;
+}
+.nav-links a:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+.nav-cta {
+  display: flex; align-items: center; gap: 7px;
+  background: var(--red); color: #fff !important;
+  padding: 7px 18px !important; border-radius: 999px !important;
+  font-weight: 600 !important; font-size: 13.5px !important;
+  box-shadow: 0 0 20px var(--red-glow);
+  transition: box-shadow 0.2s, transform 0.15s !important;
+}
+.nav-cta:hover { box-shadow: 0 0 30px var(--red-glow); transform: translateY(-1px); background: var(--red) !important; }
+
+/* ── BANNER ──────────────────────────────────────────── */
+.banner {
+  width: 100%;
+  background: linear-gradient(135deg, #0a1628 0%, #0d1f35 40%, #0e1a2a 100%);
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+  position: relative;
+}
+.banner::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 55% 80% at 80% 50%, rgba(232,48,79,0.1) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 60% at 10% 50%, rgba(37,99,235,0.08) 0%, transparent 50%);
+  pointer-events: none;
+}
+.banner-inner {
+  max-width: 1100px; margin: 0 auto;
+  padding: 56px 32px;
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 48px; align-items: center;
+  position: relative;
+}
+.banner-tag {
+  display: inline-block;
+  background: rgba(232,48,79,0.15); border: 1px solid rgba(232,48,79,0.35);
+  border-radius: 999px; padding: 4px 14px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--red); margin-bottom: 20px;
+}
+.banner-title {
+  font-family: var(--font-head);
+  font-size: clamp(30px, 4vw, 52px);
+  font-weight: 800; line-height: 1.08;
+  letter-spacing: -0.04em; color: #fff; margin-bottom: 24px;
+}
+.banner-title span { color: var(--red); }
+.banner-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.banner-list li {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 15px; color: #94afc8; font-weight: 500;
+}
+.bl-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--red); flex-shrink: 0;
+  box-shadow: 0 0 8px var(--red);
+}
+.banner-btns {
+  display: flex; align-items: center; gap: 12px;
+  flex-wrap: wrap; margin-top: 28px;
+}
+.banner-note {
+  margin-top: 14px; font-size: 12px; color: var(--mute);
+}
+
+/* mockup */
+.banner-right { position: relative; display: flex; justify-content: center; }
+.banner-mockup {
+  background: #0b1520; border: 1px solid #1e3048;
+  border-radius: 14px; width: 300px;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04);
+  overflow: hidden;
+}
+.bm-bar {
+  background: #0d1a28; padding: 10px 14px;
+  display: flex; align-items: center; gap: 6px;
+  border-bottom: 1px solid #1e3048;
+}
+.bm-dot { width: 10px; height: 10px; border-radius: 50%; }
+.bm-url {
+  margin-left: 8px; font-size: 11px; color: #4a6070;
+  font-family: monospace;
+}
+.bm-body { padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+.bm-tweet {
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(255,255,255,0.03); border: 1px solid #1e3048;
+  border-radius: 8px; padding: 10px 12px;
+  animation: deletePulse 2s ease-in-out infinite;
+}
+.bmt-avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: linear-gradient(135deg, #1e3a5f, #2e5080);
+  flex-shrink: 0;
+}
+.bmt-content { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+.bmt-line { height: 7px; border-radius: 4px; background: #1e3048; }
+.bmt-line.long { width: 90%; }
+.bmt-line.med  { width: 65%; }
+.bmt-line.short{ width: 45%; }
+.bmt-badge { font-size: 14px; flex-shrink: 0; }
+@keyframes deletePulse {
+  0%, 100% { border-color: #1e3048; background: rgba(255,255,255,0.03); }
+  50% { border-color: rgba(232,48,79,0.4); background: rgba(232,48,79,0.05); }
+}
+.bm-stats {
+  display: flex; gap: 8px; margin-top: 4px;
+}
+.bm-stat {
+  flex: 1; background: rgba(255,255,255,0.03); border: 1px solid #1e3048;
+  border-radius: 8px; padding: 10px; text-align: center;
+}
+.bm-stat-num {
+  display: block; font-family: var(--font-head);
+  font-size: 22px; font-weight: 800; color: var(--red);
+  line-height: 1; margin-bottom: 3px;
+}
+.bm-stat span:last-child { font-size: 10px; color: var(--mute); text-transform: uppercase; letter-spacing: 0.08em; }
+
+/* floating X */
+.bird {
+  position: absolute;
+  font-size: 22px; color: rgba(232,48,79,0.25);
+  font-weight: 900; user-select: none;
+  animation: floatBird 4s ease-in-out infinite;
+}
+.b1 { top: 10%; right: 5%; animation-delay: 0s; font-size: 18px; }
+.b2 { top: 55%; right: -2%; animation-delay: 1.2s; font-size: 26px; color: rgba(232,48,79,0.15); }
+.b3 { top: 25%; right: 15%; animation-delay: 2.1s; font-size: 14px; }
+@keyframes floatBird {
+  0%, 100% { transform: translateY(0) rotate(-5deg); }
+  50% { transform: translateY(-12px) rotate(5deg); }
+}
+@media (max-width: 768px) {
+  .banner-inner { grid-template-columns: 1fr; padding: 40px 20px; gap: 32px; }
+  .banner-right { display: none; }
+}
+
+/* ── BUTTONS ─────────────────────────────────────────── */
+.btn-primary {
+  display: inline-flex; align-items: center; gap: 9px;
+  background: var(--red); color: #fff;
+  padding: 13px 26px; border-radius: 999px;
+  font-weight: 700; font-size: 15px;
+  box-shadow: 0 0 32px var(--red-glow);
+  transition: box-shadow 0.2s, transform 0.15s;
+  white-space: nowrap;
+}
+.btn-primary:hover { box-shadow: 0 0 48px var(--red-glow); transform: translateY(-2px); }
+.btn-secondary {
+  display: inline-flex; align-items: center; gap: 9px;
+  background: transparent; color: var(--dim);
+  padding: 12px 22px; border-radius: 999px;
+  border: 1px solid var(--border2);
+  font-weight: 500; font-size: 15px;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  white-space: nowrap;
+}
+.btn-secondary:hover { color: var(--text); border-color: var(--border2); background: rgba(255,255,255,0.04); }
+
+/* ── TRUST STRIP ─────────────────────────────────────── */
+.trust {
+  display: flex; align-items: center; justify-content: center;
+  flex-wrap: wrap; gap: 0;
+  border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+  background: var(--bg2);
+}
+.trust-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 16px 28px;
+  font-size: 13px; font-weight: 500; color: var(--dim);
+  border-right: 1px solid var(--border);
+}
+.trust-item:last-child { border-right: none; }
+.trust-item svg { color: var(--green); flex-shrink: 0; }
+
+/* ── FEATURES ────────────────────────────────────────── */
+#about { padding: 90px 32px; max-width: 1100px; margin: 0 auto; }
+.section-tag {
+  font-size: 11.5px; font-weight: 700; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--red);
+  margin-bottom: 12px;
+}
+.section-title {
+  font-family: var(--font-head);
+  font-size: clamp(28px, 4vw, 46px);
+  font-weight: 800; letter-spacing: -0.03em;
+  line-height: 1.1; color: var(--text);
+  margin-bottom: 14px;
+}
+.section-sub { font-size: 17px; color: var(--dim); max-width: 520px; line-height: 1.6; }
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px; margin-top: 52px;
+}
+.feat-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px;
+  transition: border-color 0.2s, transform 0.2s;
+}
+.feat-card:hover { border-color: var(--border2); transform: translateY(-3px); }
+.feat-icon {
+  width: 44px; height: 44px; border-radius: 12px;
+  background: var(--red-dim); border: 1px solid rgba(232,48,79,0.2);
+  display: grid; place-items: center;
+  font-size: 20px; margin-bottom: 18px;
+}
+.feat-card h3 {
+  font-family: var(--font-head); font-size: 18px;
+  font-weight: 700; margin-bottom: 8px; color: var(--text);
+}
+.feat-card p { font-size: 14px; color: var(--dim); line-height: 1.6; }
+
+/* ── HOW TO USE ──────────────────────────────────────── */
+#help {
+  padding: 90px 32px;
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.help-inner { max-width: 1100px; margin: 0 auto; }
+.steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-top: 52px; }
+.step {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px;
+  position: relative;
+  transition: border-color 0.2s;
+}
+.step:hover { border-color: rgba(232,48,79,0.35); }
+.step-num {
+  font-family: var(--font-head); font-size: 48px; font-weight: 800;
+  color: rgba(232,48,79,0.12); line-height: 1;
+  margin-bottom: 16px;
+}
+.step h3 { font-family: var(--font-head); font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+.step p { font-size: 14px; color: var(--dim); line-height: 1.6; }
+
+/* ── PRIVACY ─────────────────────────────────────────── */
+#privacy { padding: 90px 32px; max-width: 1100px; margin: 0 auto; }
+.privacy-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px; margin-top: 52px;
+}
+.privacy-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px 26px;
+  display: flex; gap: 16px; align-items: flex-start;
+}
+.privacy-icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+.privacy-card h4 { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 5px; }
+.privacy-card p { font-size: 13px; color: var(--dim); line-height: 1.55; }
+.privacy-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 32px; font-size: 14px; color: var(--dim);
+  border-bottom: 1px solid var(--border2); padding-bottom: 2px;
+  transition: color 0.15s, border-color 0.15s;
+}
+.privacy-link:hover { color: var(--text); border-color: var(--dim); }
+
+/* ── MUNBOX ──────────────────────────────────────────── */
+#munbox {
+  padding: 90px 32px;
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.munbox-inner { max-width: 1100px; margin: 0 auto; }
+.munbox-card {
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 20px;
+  padding: 40px 44px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: center;
+  margin-top: 40px;
+  position: relative;
+  overflow: hidden;
+}
+.munbox-card::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 60% 80% at 100% 50%, rgba(245,158,11,0.05) 0%, transparent 60%);
+  pointer-events: none;
+}
+.munbox-eyebrow {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--amber); margin-bottom: 10px;
+}
+.munbox-card h3 {
+  font-family: var(--font-head); font-size: 32px;
+  font-weight: 800; letter-spacing: -0.03em; margin-bottom: 12px;
+}
+.munbox-card > div > p { font-size: 15px; color: var(--dim); line-height: 1.65; margin-bottom: 24px; }
+.btn-amber {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--amber); color: #000;
+  padding: 12px 24px; border-radius: 999px;
+  font-weight: 700; font-size: 14px;
+  transition: opacity 0.15s, transform 0.15s;
+}
+.btn-amber:hover { opacity: 0.9; transform: translateY(-1px); }
+.munbox-features { display: flex; flex-direction: column; gap: 14px; }
+.munbox-feat {
+  display: flex; gap: 14px; align-items: flex-start;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px 16px;
+}
+.munbox-feat-icon { font-size: 20px; flex-shrink: 0; }
+.munbox-feat-text h5 { font-size: 13.5px; font-weight: 600; margin-bottom: 3px; }
+.munbox-feat-text p { font-size: 12.5px; color: var(--dim); line-height: 1.5; }
+
+/* ── FOOTER ──────────────────────────────────────────── */
+footer {
+  padding: 40px 32px;
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 16px;
+}
+.footer-brand {
+  display: flex; align-items: center; gap: 9px;
+  font-family: var(--font-head); font-size: 15px; font-weight: 800;
+}
+.footer-brand img { width: 24px; height: 24px; min-width: 24px; border-radius: 6px; object-fit: contain; }
+.footer-links { display: flex; gap: 20px; flex-wrap: wrap; }
+.footer-links a { font-size: 13px; color: var(--mute); transition: color 0.15s; }
+.footer-links a:hover { color: var(--dim); }
+.footer-copy { font-size: 12px; color: var(--mute); }
+
+/* ── RESPONSIVE ──────────────────────────────────────── */
+@media (max-width: 768px) {
+  nav { padding: 0 16px; }
+  .nav-links a:not(.nav-cta) { display: none; }
+  .hero { padding: 56px 20px 52px; }
+  #about, #privacy { padding: 60px 20px; }
+  #help, #munbox { padding: 60px 20px; }
+  .munbox-card { grid-template-columns: 1fr; padding: 28px 24px; gap: 28px; }
+  footer { flex-direction: column; align-items: flex-start; padding: 32px 20px; }
+  .trust-item { padding: 12px 16px; font-size: 12px; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    <img src="icons/icon48.png" alt="Tweet Cleaner" />
+    Tweet<span>Cleaner</span>
+  </div>
+  <div class="nav-links">
+    <a href="#about">About</a>
+    <a href="#help">Help</a>
+    <a href="#privacy">Privacy</a>
+    <a href="#munbox">MunBox</a>
+    <a class="nav-cta" href="https://chromewebstore.google.com/search/tweet%20cleaner" target="_blank" rel="noopener">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Add to Chrome
+    </a>
+  </div>
+</nav>
+
+<!-- BANNER -->
+<div class="banner">
+  <div class="banner-inner">
+    <div class="banner-left">
+      <div class="banner-tag">Chrome Extension</div>
+      <h2 class="banner-title">Clean up your<br/>Twitter history<br/><span>in bulk</span></h2>
+      <ul class="banner-list">
+        <li><span class="bl-dot"></span>Delete hundreds of tweets at once</li>
+        <li><span class="bl-dot"></span>Filter by date, keyword &amp; type</li>
+        <li><span class="bl-dot"></span>No API key — works in your browser</li>
+      </ul>
+      <div class="banner-btns">
+        <a class="btn-primary" href="https://chromewebstore.google.com/search/tweet%20cleaner" target="_blank" rel="noopener">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Add to Chrome — Free
+        </a>
+        <a class="btn-secondary" href="#help">How it works →</a>
+      </div>
+      <p class="banner-note">🔒 No login · No data collected · 100% private</p>
+    </div>
+    <div class="banner-right">
+      <div class="banner-mockup">
+        <div class="bm-bar">
+          <span class="bm-dot" style="background:#ff5f57"></span>
+          <span class="bm-dot" style="background:#febc2e"></span>
+          <span class="bm-dot" style="background:#28c840"></span>
+          <span class="bm-url">x.com/you</span>
+        </div>
+        <div class="bm-body">
+          <div class="bm-tweet del">
+            <div class="bmt-avatar"></div>
+            <div class="bmt-content">
+              <div class="bmt-line long"></div>
+              <div class="bmt-line short"></div>
+            </div>
+            <div class="bmt-badge">🗑️</div>
+          </div>
+          <div class="bm-tweet del" style="animation-delay:0.3s">
+            <div class="bmt-avatar"></div>
+            <div class="bmt-content">
+              <div class="bmt-line med"></div>
+              <div class="bmt-line long"></div>
+            </div>
+            <div class="bmt-badge">🗑️</div>
+          </div>
+          <div class="bm-tweet del" style="animation-delay:0.6s">
+            <div class="bmt-avatar"></div>
+            <div class="bmt-content">
+              <div class="bmt-line short"></div>
+              <div class="bmt-line med"></div>
+            </div>
+            <div class="bmt-badge">🗑️</div>
+          </div>
+          <div class="bm-stats">
+            <div class="bm-stat"><span class="bm-stat-num" id="cntDel">0</span><span>deleted</span></div>
+            <div class="bm-stat"><span class="bm-stat-num" id="cntScan">0</span><span>scanned</span></div>
+          </div>
+        </div>
+      </div>
+      <!-- floating X birds -->
+      <div class="bird b1">𝕏</div>
+      <div class="bird b2">𝕏</div>
+      <div class="bird b3">𝕏</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- TRUST -->
+<div class="trust">
+  <div class="trust-item">
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 8 6 12 14 4"/></svg>
+    No API key needed
+  </div>
+  <div class="trust-item">
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 8 6 12 14 4"/></svg>
+    No data collected
+  </div>
+  <div class="trust-item">
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 8 6 12 14 4"/></svg>
+    100% free &amp; open source
+  </div>
+  <div class="trust-item">
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 8 6 12 14 4"/></svg>
+    7 languages supported
+  </div>
+  <div class="trust-item">
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 8 6 12 14 4"/></svg>
+    Scan before you delete
+  </div>
+</div>
+
+<!-- ABOUT / FEATURES -->
+<section id="about">
+  <div class="section-tag">About</div>
+  <h2 class="section-title">Full control over<br />your Twitter history</h2>
+  <p class="section-sub">Tweet Cleaner gives you precise filters to delete exactly what you want — and keep what you don't.</p>
+
+  <div class="features-grid">
+    <div class="feat-card">
+      <div class="feat-icon">🔢</div>
+      <h3>Delete by count</h3>
+      <p>Choose 10, 50, 100, 1000, or delete everything. You decide exactly how many tweets to remove.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">📅</div>
+      <h3>Date range filter</h3>
+      <p>Delete only tweets from a specific period. Clean up everything before 2020 while keeping recent posts.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">🔍</div>
+      <h3>Keyword filter</h3>
+      <p>Delete tweets that contain a word. Or keep tweets that contain a word. Both directions, full control.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">📂</div>
+      <h3>Content types</h3>
+      <p>Choose what to delete: tweets, replies, retweets — any combination. Mix and match freely.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">🔎</div>
+      <h3>Scan before delete</h3>
+      <p>The extension scans first and shows you exactly how many tweets match your filters — before deleting anything.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">🌍</div>
+      <h3>7 languages</h3>
+      <p>English, Turkish, German, Spanish, French, Portuguese, and Arabic. The UI adapts to your browser language automatically.</p>
+    </div>
+  </div>
+</section>
+
+<!-- HELP -->
+<section id="help">
+  <div class="help-inner">
+    <div class="section-tag">Help</div>
+    <h2 class="section-title">Three steps to a<br />cleaner timeline</h2>
+    <p class="section-sub">No setup, no accounts, no configuration. Just go to your profile and start.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <h3>Go to your X profile</h3>
+        <p>Open <strong>x.com/your_username</strong> in Chrome. For replies, go to the Replies tab on your profile. You must be logged in and on your own profile.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <h3>Open the extension &amp; configure</h3>
+        <p>Click the Tweet Cleaner icon in your Chrome toolbar. Set your filters: how many, which dates, which types, and optional keyword filters.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <h3>Scan, confirm &amp; delete</h3>
+        <p>Click Start. The extension scans first and shows you the count. Review the results, confirm, and it deletes automatically. Keep the tab open while it runs.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">⚠</div>
+        <h3>Back up first</h3>
+        <p>Deletion is permanent. Before starting, go to <strong>X Settings → Download your data</strong> to keep a backup of your tweets.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRIVACY -->
+<section id="privacy">
+  <div class="section-tag">Privacy</div>
+  <h2 class="section-title">Zero data collection.<br />We mean zero.</h2>
+  <p class="section-sub">Your username, password, tweets, and browsing history never leave your device. Not to us, not to anyone.</p>
+
+  <div class="privacy-grid">
+    <div class="privacy-card">
+      <div class="privacy-icon">🔒</div>
+      <div>
+        <h4>No username or password</h4>
+        <p>The extension uses your existing logged-in session on X.com. We never see or store your credentials.</p>
+      </div>
+    </div>
+    <div class="privacy-card">
+      <div class="privacy-icon">🖥️</div>
+      <div>
+        <h4>All local, all browser</h4>
+        <p>Every operation happens inside your browser tab. No external servers, no data transmission, ever.</p>
+      </div>
+    </div>
+    <div class="privacy-card">
+      <div class="privacy-icon">📊</div>
+      <div>
+        <h4>No analytics or tracking</h4>
+        <p>We don't use Google Analytics, Mixpanel, or any tracking service. We have no idea how many people use this extension.</p>
+      </div>
+    </div>
+    <div class="privacy-card">
+      <div class="privacy-icon">💾</div>
+      <div>
+        <h4>Local preferences only</h4>
+        <p>Your filter settings (count, dates, delay) are saved locally with Chrome's storage API. They never leave your device.</p>
+      </div>
+    </div>
+    <div class="privacy-card">
+      <div class="privacy-icon">🏢</div>
+      <div>
+        <h4>Not affiliated with X Corp.</h4>
+        <p>Tweet Cleaner is an independent open-source project. It is not affiliated with, endorsed by, or connected to X Corp. or Twitter, Inc.</p>
+      </div>
+    </div>
+    <div class="privacy-card">
+      <div class="privacy-icon">⚖️</div>
+      <div>
+        <h4>No warranty</h4>
+        <p>Deleted tweets cannot be recovered. The developer is not responsible for data loss. Use at your own risk and always back up first.</p>
+      </div>
+    </div>
+  </div>
+
+  <a class="privacy-link" href="privacy-policy.html" target="_blank">
+    Read the full Privacy Policy
+    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3H3a1 1 0 00-1 1v9a1 1 0 001 1h9a1 1 0 001-1V9M10 2h4m0 0v4m0-4L7 9"/></svg>
+  </a>
+</section>
+
+<!-- MUNBOX -->
+<section id="munbox">
+  <div class="munbox-inner">
+    <div class="section-tag" style="color:var(--amber)">Also by the same developer</div>
+    <h2 class="section-title">More tools.<br />Same philosophy.</h2>
+
+    <div class="munbox-card">
+      <div>
+        <div class="munbox-eyebrow">📱 MunBox for iPhone</div>
+        <h3>Back up your iPhone — no cloud required</h3>
+        <p>Transfer photos, videos, contacts and calendar events from your iPhone directly to your computer — over WiFi or USB cable. No iCloud, no accounts, no subscription. Your data stays on your local network.</p>
+        <a class="btn-amber" href="https://munbox.info" target="_blank" rel="noopener">
+          Visit MunBox
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+        </a>
+      </div>
+      <div class="munbox-features">
+        <div class="munbox-feat">
+          <div class="munbox-feat-icon">📶</div>
+          <div class="munbox-feat-text">
+            <h5>WiFi Transfer</h5>
+            <p>Open a browser on your PC or Mac, type the address shown in MunBox, and download everything — no cable needed.</p>
+          </div>
+        </div>
+        <div class="munbox-feat">
+          <div class="munbox-feat-icon">🗜️</div>
+          <div class="munbox-feat-text">
+            <h5>ZIP Download</h5>
+            <p>Pack your entire backup into a single ZIP archive. Supports archives larger than 4 GB.</p>
+          </div>
+        </div>
+        <div class="munbox-feat">
+          <div class="munbox-feat-icon">🔒</div>
+          <div class="munbox-feat-text">
+            <h5>100% Private</h5>
+            <p>No cloud, no servers, no accounts. Your data never leaves your local network.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-brand">
+    <img src="icons/icon48.png" alt="Tweet Cleaner" />
+    Tweet Cleaner
+  </div>
+  <div class="footer-links">
+    <a href="#about">About</a>
+    <a href="#help">Help</a>
+    <a href="#privacy">Privacy</a>
+    <a href="privacy-policy.html" target="_blank">Privacy Policy</a>
+    <a href="https://munbox.info" target="_blank" rel="noopener">MunBox</a>
+    <a href="mailto:capatengin@gmail.com">Contact</a>
+  </div>
+  <div class="footer-copy">© 2026 Engin Capat · Not affiliated with X Corp.</div>
+</footer>
+
+<script>
+// Banner sayaç animasyonu
+(function(){
+  var del = document.getElementById('cntDel');
+  var scan = document.getElementById('cntScan');
+  if (!del || !scan) return;
+  var d = 0, s = 0;
+  setInterval(function(){
+    d += Math.floor(Math.random() * 3) + 1;
+    s += Math.floor(Math.random() * 5) + 2;
+    del.textContent = d;
+    scan.textContent = s;
+    if (d > 999) { d = 0; s = 0; }
+  }, 800);
+})();
+</script>
+</body>
+</html>
